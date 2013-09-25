@@ -15,7 +15,7 @@ class Chef
           req = Net::HTTP::Post.new("/stash/silence/#{client}", {'Content-Type' => 'application/json'})
           now = Time.now.to_i
 
-          if timeout
+          if timeout.is_a?(Fixnum)
             expires = now + timeout
             payload = { 'timestamp' => now, 'owner' => 'chef', 'expires' => expires }.to_json
           else
