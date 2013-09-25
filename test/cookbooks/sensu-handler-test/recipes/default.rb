@@ -24,8 +24,12 @@ log "success" do
   action :nothing
 end
 
-http_request "check_for_silence" do
-  url node['chef_client']['sensu_api_url'] + '/stashes/silence/' + node.name
-  action :get
-  notifies :write, "log[success]", :immediately
+if node['chef_client']['sensu_api_url']
+  http_request "check_for_silence" do
+    url node['chef_client']['sensu_api_url'] + '/stashes/silence/' + node.name
+    action :get
+    notifies :write, "log[success]", :immediately
+  end
+else
+  Chef::Log.fatal!("Could not test Sensu handlers, node['chef_client']['sensu_api_url'] is not set.")
 end

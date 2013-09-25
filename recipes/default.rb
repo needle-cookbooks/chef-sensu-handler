@@ -38,19 +38,23 @@ ruby_block 'trigger_start_handlers' do
   action :nothing
 end
 
-chef_handler "Chef::Handler::Sensu::Silence" do
-  source handler_file
-  arguments :api => node['chef_client']['sensu_api_url'],
-            :timeout => node['chef_client']['sensu_stash_timeout'],
-            :client => node.name
-  supports :start => true
-  notifies :create, "ruby_block[trigger_start_handlers]", :immediately
-  action :enable
-end.run_action(:enable)
+if node['chef_client']['sensu_api_url']
+  chef_handler "Chef::Handler::Sensu::Silence" do
+    source handler_file
+    arguments :api => node['chef_client']['sensu_api_url'],
+              :timeout => node['chef_client']['sensu_stash_timeout'],
+              :client => node.name
+    supports :start => true
+    notifies :create, "ruby_block[trigger_start_handlers]", :immediately
+    action :enable
+  end.run_action(:enable)
 
-chef_handler "Chef::Handler::Sensu::Unsilence" do
-  source handler_file
-  arguments :api => node['chef_client']['sensu_api_url'], :client => node.name
-  supports :report => true, :exception => true
-  action :enable
-end.run_action(:enable)
+  chef_handler "Chef::Handler::Sensu::Unsilence" do
+    source handler_file
+    arguments :api => node['chef_client']['sensu_api_url'], :client => node.name
+    supports :report => true, :exception => true
+    action :enable
+  end.run_action(:enable)
+else
+  Chef::Log.error("Could not activate Sensu handlers, node['chef_client']['sensu_api_url'] is not set.")
+end
