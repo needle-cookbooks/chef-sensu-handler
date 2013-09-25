@@ -40,7 +40,9 @@ end
 
 chef_handler "Chef::Handler::Sensu::Silence" do
   source handler_file
-  arguments :api => node['chef_client']['sensu_api_url'], :client => node.name
+  arguments :api => node['chef_client']['sensu_api_url'],
+            :timeout => node['chef_client']['sensu_stash_timeout'],
+            :client => node.name
   supports :start => true
   notifies :create, "ruby_block[trigger_start_handlers]", :immediately
   action :enable

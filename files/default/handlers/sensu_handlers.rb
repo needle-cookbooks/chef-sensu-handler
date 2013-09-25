@@ -11,9 +11,17 @@ class Chef
           @uri = URI.parse(api)
         end
 
-        def silence_client(client)
+        def silence_client(client, timeout)
           req = Net::HTTP::Post.new("/stash/silence/#{client}", {'Content-Type' => 'application/json'})
-          payload = { 'timestamp' => Time.now.to_i, 'owner' => 'chef' }.to_json
+          now = Time.now.to_i
+
+          if timeout
+            expires = now + timeout
+            payload = { 'timestamp' => now, 'owner' => 'chef', 'expires' => expires }.to_json
+          else
+            payload = { 'timestamp' => now, 'owner' => 'chef' }.to_json
+          end
+
           req.body = payload
 
           begin
@@ -41,11 +49,12 @@ class Chef
         def initialize(config={})
           @api = Chef::Handler::Sensu::API.new(config[:api])
           @client = config[:client]
+          @timeout = config[:timeout] || nil
         end
 
         def report
           Chef::Log.info("Sensu Handler: Silencing #{@client}")
-          @api.silence_client(@client)
+          @api.silence_client(@client, @timeout)
         end
       end
 
