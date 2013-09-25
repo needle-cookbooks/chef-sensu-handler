@@ -31,5 +31,5 @@ if node['chef_client']['sensu_api_url']
     notifies :write, "log[success]", :immediately
   end
 else
-  Chef::Log.fatal!("Could not test Sensu handlers, node['chef_client']['sensu_api_url'] is not set.")
+  Chef::Application.fatal!("Could not test Sensu handlers, node['chef_client']['sensu_api_url'] is not set.")
 end
