@@ -1,6 +1,6 @@
 # chef-handler-sensu
 
-This cookbook installs a pair of Chef handlers for silencing and unsilencing Sensu checks against a specified client via the Sensu API. 
+This cookbook installs a pair of Chef handlers for silencing and unsilencing Sensu checks against a specified client via the Sensu API.
 
 # Requirements
 
@@ -12,7 +12,8 @@ Include this cookbook's default recipe in another recipe or role near the beginn
 
 # Attributes
 
-`chef_client.sensu_api_url` - the URL of your Sensu API end point
+`chef_client.sensu_api_url` - the URL of your Sensu API end point (defaults to nil)
+`chef_client.sensu_stash_timeout` - the duration in seconds between when a client is silenced and when that silenced stash should be considered expired (defaults to 3600)
 
 # Recipes
 
