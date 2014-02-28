@@ -12,17 +12,22 @@ class Chef
         end
 
         def silence_client(client, timeout)
-          req = Net::HTTP::Post.new("/stash/silence/#{client}", {'Content-Type' => 'application/json'})
+          req = Net::HTTP::Post.new("/stashes", {'Content-Type' => 'application/json'})
           now = Time.now.to_i
 
+          payload = {
+            'path' => "silence/#{client}",
+            'content' => {
+              'timestamp' => now,
+              'owner' => 'chef'
+            }
+          }
+
           if timeout.is_a?(Fixnum)
-            expires = now + timeout
-            payload = { 'timestamp' => now, 'owner' => 'chef', 'expires' => expires }.to_json
-          else
-            payload = { 'timestamp' => now, 'owner' => 'chef' }.to_json
+            payload = payload.merge({ 'expire' => timeout })
           end
 
-          req.body = payload
+          req.body = payload.to_json
 
           begin
             Net::HTTP.start(@uri.host, @uri.port) do |http|
