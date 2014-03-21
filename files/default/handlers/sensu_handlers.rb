@@ -8,45 +8,59 @@ class Chef
 
       class API
         def initialize(api)
-          @use_ssl = api.include?("https")
           @uri = URI.parse(api)
+          @use_ssl = @uri.scheme == 'https' ? true : false
         end
 
-        def silence_client(client, timeout, ca_file, verify_mode, user, pass)
-          req = Net::HTTP::Post.new("/stash/silence/#{client}", {'Content-Type' => 'application/json'})
+        def silence_client(config)
+          req = Net::HTTP::Post.new("/stash/silence/#{config[:client]}", {'Content-Type' => 'application/json'})
           now = Time.now.to_i
-        
-          if timeout.is_a?(Fixnum)
-            expires = now + timeout
+
+          if config[:timeout].is_a?(Fixnum)
+            expires = now + config[:timeout]
             payload = { 'timestamp' => now, 'owner' => 'chef', 'expires' => expires }.to_json
           else
             payload = { 'timestamp' => now, 'owner' => 'chef' }.to_json
           end
 
           req.body = payload
-          req.basic_auth user, pass if user && pass
-          options = {:use_ssl => @use_ssl, :ca_file => ca_file, :verify_mode => verify_mode}
+          if config[:user] && config[:pass]
+            req.basic_auth config[:user], config[:pass]
+          end
+          options = {
+            :use_ssl => @use_ssl,
+            :ca_file => config[:ca_file],
+            :verify_mode => config[:verify_mode]
+          }
 
           begin
             Net::HTTP.start(@uri.host, @uri.port, options) do |http|
               http.request(req)
             end
           rescue StandardError, Timeout::Error => e
-            Chef::Log.error("Error silencing Sensu client #{client}: " + e.inspect)
+            Chef::Log.error("Error silencing Sensu client #{config[:client]}: " + e.inspect)
           end
         end
 
-        def unsilence_client(client, ca_file, verify_mode, user, pass)
-          req = Net::HTTP::Delete.new("/stash/silence/#{client}")
-          req.basic_auth user, pass if user && pass
-          options = {:use_ssl => @use_ssl, :ca_file => ca_file, :verify_mode => verify_mode}
+        def unsilence_client(config)
+          req = Net::HTTP::Delete.new("/stash/silence/#{config[:client]}")
+
+          if config[:user] && config[:pass]
+            req.basic_auth config[:user], config[:pass]
+          end
+
+          options = {
+            :use_ssl => @use_ssl,
+            :ca_file => config[:ca_file],
+            :verify_mode => config[:verify_mode]
+          }
 
           begin
             Net::HTTP.start(@uri.host, @uri.port, options) do |http|
               http.request(req)
             end
           rescue StandardError, Timeout::Error => e
-            Chef::Log.error("Error unsilencing Sensu client #{client}: " + e.inspect)
+            Chef::Log.error("Error unsilencing Sensu client #{config[:client]}: " + e.inspect)
           end
         end
       end
@@ -54,33 +68,24 @@ class Chef
       class Silence < Chef::Handler
         def initialize(config={})
           @api = Chef::Handler::Sensu::API.new(config[:api])
-          @client = config[:client]
-          @timeout = config[:timeout] || nil
-          @ca_file = config[:ca_file]
-          @verify_mode = config[:verify_mode]
-          @user = config[:user]
-          @pass = config[:pass]
+          @config = config
         end
 
         def report
           Chef::Log.info("Sensu Handler: Silencing #{@client}")
-          @api.silence_client(@client, @timeout, @ca_file, @verify_mode, @user, @pass)
+          @api.silence_client(@config)
         end
       end
 
       class Unsilence < Chef::Handler
         def initialize(config={})
           @api = Chef::Handler::Sensu::API.new(config[:api])
-          @client = config[:client]
-          @ca_file = config[:ca_file]
-          @verify_mode = config[:verify_mode]
-          @user = config[:user]
-          @pass = config[:pass]
+          @config = config
         end
 
         def report
           Chef::Log.info("Sensu Handler: Unsilencing #{@client}")
-          @api.unsilence_client(@client, @ca_file, @verify_mode, @user, @pass)
+          @api.unsilence_client(@config)
         end
       end
     end

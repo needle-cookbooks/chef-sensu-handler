@@ -12,8 +12,16 @@ Include this cookbook's default recipe in another recipe or role near the beginn
 
 # Attributes
 
-`chef_client.sensu_api_url` - the URL of your Sensu API end point (defaults to nil)
-`chef_client.sensu_stash_timeout` - the duration in seconds between when a client is silenced and when that silenced stash should be considered expired (defaults to 3600)
+`chef_client.sensu_config` - a hash of configuration options (defaults to an empty hash). The hash should follow the following format:
+{
+    :api => "http://apiURL/", 
+    :client => node.name, # the chef client to silence
+    :timeout => 300, # the duration in seconds between when a client is silenced and when that silenced stash should be considered expired
+    :ca_file => nil, # path to certificate file, if applicable
+    :verify_mode => 0, # 0 == OpenSSL::SSL::VERIFY_NONE
+    :user => "user", # if your api sits behind basic authentication, specify those values here
+    :pass => "password"
+}
 
 # Recipes
 

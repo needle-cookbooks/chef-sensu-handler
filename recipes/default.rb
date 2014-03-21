@@ -41,13 +41,7 @@ end
 if node['chef_client']['sensu_api_url']
   chef_handler "Chef::Handler::Sensu::Silence" do
     source handler_file
-    arguments :api => node['chef_client']['sensu_api_url'],
-              :timeout => node['chef_client']['sensu_stash_timeout'],
-              :client => node.name,
-              :ca_file => node['chef_client']['sensu_ca_file'],
-              :verify_mode => node['chef_client']['sensu_verify_mode'],
-              :user => node['chef_client']['sensu_api_user'],
-              :pass => node['chef_client']['sensu_api_pass']
+    arguments node['chef_client']['sensu_config']
     supports :start => true
     notifies :create, "ruby_block[trigger_start_handlers]", :immediately
     action :enable
@@ -55,12 +49,7 @@ if node['chef_client']['sensu_api_url']
 
   chef_handler "Chef::Handler::Sensu::Unsilence" do
     source handler_file
-    arguments :api => node['chef_client']['sensu_api_url'],
-              :client => node.name,
-              :ca_file => node['chef_client']['sensu_ca_file'],
-              :verify_mode => node['chef_client']['sensu_verify_mode'],
-              :user => node['chef_client']['sensu_api_user'],
-              :pass => node['chef_client']['sensu_api_pass']
+    arguments node['chef_client']['sensu_config']
     supports :report => true, :exception => true
     action :enable
   end.run_action(:enable)
