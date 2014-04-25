@@ -38,7 +38,7 @@ ruby_block 'trigger_start_handlers' do
   action :nothing
 end
 
-if node['chef_client']['sensu_api_url']
+if node['chef_client']['sensu_config']
   chef_handler "Chef::Handler::Sensu::Silence" do
     source handler_file
     arguments node['chef_client']['sensu_config']
@@ -54,5 +54,5 @@ if node['chef_client']['sensu_api_url']
     action :enable
   end.run_action(:enable)
 else
-  Chef::Log.error("Could not activate Sensu handlers, node['chef_client']['sensu_api_url'] is not set.")
+  Chef::Log.error("Could not activate Sensu handlers, node['chef_client']['sensu_config'] is not set.")
 end
